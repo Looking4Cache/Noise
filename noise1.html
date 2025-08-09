@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Festival Noise Cancellation</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+```
+    .container {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        padding: 30px;
+        max-width: 500px;
+        width: 100%;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+    
+    h1 {
+        text-align: center;
+        margin-bottom: 30px;
+        font-size: 1.8rem;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    }
+    
+    .step {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 15px;
+        padding: 20px;
+        margin: 15px 0;
+        text-align: center;
+    }
+    
+    .step.active {
+        background: rgba(76, 175, 80, 0.3);
+        border: 2px solid rgba(76, 175, 80, 0.5);
+    }
+    
+    .step.completed {
+        background: rgba(76, 175, 80, 0.2);
+        border: 2px solid rgba(76, 175, 80, 0.3);
+    }
+    
+    .step.error {
+        background: rgba(244, 67, 54, 0.2);
+        border: 2px solid rgba(244, 67, 54, 0.5);
+    }
+    
+    button {
+        background: linear-gradient(45deg, #4CAF50, #45a049);
+        color: white;
+        border: none;
+        padding: 15px 30px;
+        border-radius: 50px;
+        font-size: 1rem;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin: 10px;
+        min-width: 150px;
+    }
+    
+    button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    }
+    
+    button:disabled {
+        background: #666;
+        cursor: not-allowed;
+        transform: none;
+    }
+    
+    .stop-btn {
+        background: linear-gradient(45deg, #f44336, #d32f2f);
+    }
+    
+    .test-btn {
+        background: linear-gradient(45deg, #ff9800, #f57c00);
+    }
+    
+    input[type="range"] {
+        width: 100%;
+        margin: 10px 0;
+        -webkit-appearance: none;
+        height: 8px;
+        border-radius: 5px;
+        background: rgba(255, 255, 255, 0.3);
+        outline: none;
+    }
+    
+    input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: #4CAF50;
+        cursor: pointer;
+    }
+    
+    .controls {
+        display: none;
+        margin-top: 20px;
+    }
+    
+    .controls.active {
+        display: block;
+    }
+    
+    .visualizer {
+        width: 100%;
+        height: 100px;
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 10px;
+        margin: 20px 0;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    canvas {
+        width: 100%;
+        height: 100%;
+        border-radius: 10px;
+    }
+    
+    .debug {
+        background: rgba(0, 0, 0, 0.3);
+        padding: 10px;
+        border-radius: 10px;
+        margin: 10px 0;
+        font-family: monospace;
+        font-size: 0.8rem;
+        max-height: 200px;
+        overflow-y: auto;
+    }
+    
+    .warning {
+        background: rgba(255, 193, 7, 0.2);
+        border: 1px solid rgba(255, 193, 7, 0.5);
+        padding: 15px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        font-size: 0.9rem;
+    }
+</style>
+```
+
+</head>
+<body>
+    <div class="container">
+        <h1>🎵 Festival Noise Cancellation</h1>
+
+```
+    <div class="warning">
+        ⚠️ <strong>Wichtig:</strong> Diese App benötigt Mikrofonzugriff. Browser werden explizit fragen!
+    </div>
+    
+    <div class="step" id="step1">
+        <h3>🔧 Schritt 1: Browser-Kompatibilität prüfen</h3>
+        <button onclick="checkBrowserSupport()">Browser prüfen</button>
+        <div id="browserInfo"></div>
+    </div>
+    
+    <div class="step" id="step2">
+        <h3>🎤 Schritt 2: Mikrofonberechtigung anfordern</h3>
+        <button onclick="requestMicrophone()" disabled id="micBtn">Mikrofon-Berechtigung anfordern</button>
+        <div id="micInfo"></div>
+    </div>
+    
+    <div class="step" id="step3">
+        <h3>🎵 Schritt 3: Audio-System testen</h3>
+        <button onclick="testAudioSystem()" disabled id="audioBtn" class="test-btn">Audio-System testen</button>
+        <div id="audioInfo"></div>
+    </div>
+    
+    <div class="step" id="step4">
+        <h3>🔊 Schritt 4: Noise Cancellation starten</h3>
+        <button onclick="startNoiseCancellation()" disabled id="startBtn">Noise Cancellation starten</button>
+        <button onclick="stopNoiseCancellation()" disabled id="stopBtn" class="stop-btn">Stoppen</button>
+        <div id="statusInfo"></div>
+    </div>
+    
+    <div class="controls" id="controls">
+        <h3>🎚️ Einstellungen</h3>
+        <label for="volumeSlider">Lautstärke der Gegentöne: <span id="volumeValue">50%</span></label>
+        <input type="range" id="volumeSlider" min="0" max="100" value="50" oninput="updateVolume(this.value)">
+        
+        <label for="delaySlider">Verzögerung (ms): <span id="delayValue">50ms</span></label>
+        <input type="range" id="delaySlider" min="10" max="200" value="50" oninput="updateDelay(this.value)">
+    </div>
+    
+    <div class="visualizer" style="display: none;" id="visualizerContainer">
+        <canvas id="visualizer"></canvas>
+    </div>
+    
+    <div class="debug" id="debugLog">
+        <strong>Debug-Log:</strong><br>
+        Bereit für Browser-Test...
+    </div>
+</div>
+
+<script>
+    let audioContext;
+    let microphone;
+    let analyser;
+    let gainNode;
+    let delayNode;
+    let isActive = false;
+    let animationId;
+    let currentStream = null;
+    
+    const canvas = document.getElementById('visualizer');
+    const ctx = canvas.getContext('2d');
+    
+    function log(message) {
+        const debugLog = document.getElementById('debugLog');
+        const time = new Date().toLocaleTimeString();
+        debugLog.innerHTML += `<br>[${time}] ${message}`;
+        debugLog.scrollTop = debugLog.scrollHeight;
+        console.log(message);
+    }
+    
+    function setStepStatus(stepId, status) {
+        const step = document.getElementById(stepId);
+        step.classList.remove('active', 'completed', 'error');
+        step.classList.add(status);
+    }
+    
+    // Canvas-Größe setzen
+    function resizeCanvas() {
+        canvas.width = canvas.offsetWidth;
+        canvas.height = canvas.offsetHeight;
+    }
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+    
+    async function checkBrowserSupport() {
+        log("Starte Browser-Kompatibilitätsprüfung...");
+        setStepStatus('step1', 'active');
+        
+        const browserInfo = document.getElementById('browserInfo');
+        const isHTTPS = location.protocol === 'https:';
+        const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+        const hasMediaDevices = !!navigator.mediaDevices;
+        const hasGetUserMedia = hasMediaDevices && !!navigator.mediaDevices.getUserMedia;
+        const hasAudioContext = !!(window.AudioContext || window.webkitAudioContext);
+        
+        log(`Browser: ${navigator.userAgent}`);
+        log(`HTTPS: ${isHTTPS}`);
+        log(`Mobile: ${isMobile}`);
+        log(`MediaDevices: ${hasMediaDevices}`);
+        log(`getUserMedia: ${hasGetUserMedia}`);
+        log(`AudioContext: ${hasAudioContext}`);
+        
+        let status = "✅ Browser-Kompatibilität:<br>";
+        let canProceed = true;
+        
+        if (!isHTTPS) {
+            status += "❌ HTTPS erforderlich für Mikrofonzugriff<br>";
+            canProceed = false;
+        } else {
+            status += "✅ HTTPS aktiviert<br>";
+        }
+        
+        if (!hasMediaDevices) {
+            status += "❌ MediaDevices API nicht verfügbar<br>";
+            canProceed = false;
+        } else {
+            status += "✅ MediaDevices API verfügbar<br>";
+        }
+        
+        if (!hasGetUserMedia) {
+            status += "❌ getUserMedia nicht verfügbar<br>";
+            canProceed = false;
+        } else {
+            status += "✅ getUserMedia verfügbar<br>";
+        }
+        
+        if (!hasAudioContext) {
+            status += "❌ AudioContext nicht verfügbar<br>";
+            canProceed = false;
+        } else {
+            status += "✅ AudioContext verfügbar<br>";
+        }
+        
+        browserInfo.innerHTML = status;
+        
+        if (canProceed) {
+            setStepStatus('step1', 'completed');
+            document.getElementById('micBtn').disabled = false;
+            log("Browser-Kompatibilität: OK ✅");
+        } else {
+            setStepStatus('step1', 'error');
+            log("Browser-Kompatibilität: FEHLER ❌");
+        }
+    }
+    
+    async function requestMicrophone() {
+        log("Fordere Mikrofonberechtigung an...");
+        setStepStatus('step2', 'active');
+        
+        const micInfo = document.getElementById('micInfo');
+        
+        try {
+            // Explizite Berechtigungsanfrage
+            log("Rufe navigator.mediaDevices.getUserMedia auf...");
+            
+            const stream = await navigator.mediaDevices.getUserMedia({
+                audio: {
+                    echoCancellation: false,
+                    noiseSuppression: false,
+                    autoGainControl: false
+                }
+            });
+            
+            log("Mikrofonstream erhalten!");
+            currentStream = stream;
+            
+            const tracks = stream.getAudioTracks();
+            if (tracks.length === 0) {
+                throw new Error('Keine Audio-Tracks im Stream');
+            }
+            
+            const track = tracks[0];
+            const settings = track.getSettings();
+            
+            log(`Audio-Track: ${track.label}`);
+            log(`Samplerate: ${settings.sampleRate}Hz`);
+            log(`Kanäle: ${settings.channelCount}`);
+            
+            micInfo.innerHTML = `
+                ✅ <strong>Mikrofon-Berechtigung erteilt!</strong><br>
+                📱 Gerät: ${track.label || 'Standard-Mikrofon'}<br>
+                🎵 Samplerate: ${settings.sampleRate}Hz<br>
+                📊 Kanäle: ${settings.channelCount}
+            `;
+            
+            setStepStatus('step2', 'completed');
+            document.getElementById('audioBtn').disabled = false;
+            log("Mikrofonberechtigung: OK ✅");
+            
+        } catch (error) {
+            log(`Mikrofonzugriff fehlgeschlagen: ${error.name} - ${error.message}`);
+            
+            let errorMsg = "❌ <strong>Mikrofonzugriff fehlgeschlagen!</strong><br>";
+            
+            if (error.name === 'NotAllowedError') {
+                errorMsg += "🚫 Berechtigung verweigert - bitte Browser-Popup erlauben<br>";
+                errorMsg += "💡 Tipp: Seite neu laden und bei Nachfrage 'Erlauben' wählen";
+            } else if (error.name === 'NotFoundError') {
+                errorMsg += "🎤 Kein Mikrofon gefunden oder von anderer App blockiert";
+            } else if (error.name === 'NotSupportedError') {
+                errorMsg += "⚠️ Mikrofon wird nicht unterstützt (HTTPS erforderlich)";
+            } else {
+                errorMsg += `🔧 Technischer Fehler: ${error.message}`;
+            }
+            
+            micInfo.innerHTML = errorMsg;
+            setStepStatus('step2', 'error');
+        }
+    }
+    
+    async function testAudioSystem() {
+        log("Teste Audio-System...");
+        setStepStatus('step3', 'active');
+        
+        const audioInfo = document.getElementById('audioInfo');
+        
+        try {
+            // Audio-Kontext erstellen
+            audioContext = new (window.AudioContext || window.webkitAudioContext)({
+                sampleRate: 48000,
+                latencyHint: 'interactive'
+            });
+            
+            log(`AudioContext erstellt: ${audioContext.state}`);
+            
+            if (audioContext.state === 'suspended') {
+                await audioContext.resume();
+                log(`AudioContext aktiviert: ${audioContext.state}`);
+            }
+            
+            // Audio-Knoten erstellen
+            microphone = audioContext.createMediaStreamSource(currentStream);
+            analyser = audioContext.createAnalyser();
+            analyser.fftSize = 2048;
+            
+            // Test-Verbindung
+            microphone.connect(analyser);
+            
+            log("Audio-Knoten erstellt und verbunden");
+            
+            // Kurzer Test der Audio-Verarbeitung
+            const bufferLength = analyser.frequencyBinCount;
+            const dataArray = new Uint8Array(bufferLength);
+            
+            setTimeout(() => {
+                analyser.getByteFrequencyData(dataArray);
+                const average = dataArray.reduce((a, b) => a + b) / bufferLength;
+                
+                log(`Audio-Signal-Test: Durchschnitt ${average.toFixed(2)}`);
+                
+                audioInfo.innerHTML = `
+                    ✅ <strong>Audio-System funktioniert!</strong><br>
+                    🎵 Samplerate: ${audioContext.sampleRate}Hz<br>
+                    📊 FFT-Größe: ${analyser.fftSize}<br>
+                    📈 Signal-Level: ${average.toFixed(1)}
+                `;
+                
+                setStepStatus('step3', 'completed');
+                document.getElementById('startBtn').disabled = false;
+                log("Audio-System: OK ✅");
+            }, 1000);
+            
+        } catch (error) {
+            log(`Audio-System Fehler: ${error.name} - ${error.message}`);
+            audioInfo.innerHTML = `❌ <strong>Audio-System Fehler:</strong><br>${error.message}`;
+            setStepStatus('step3', 'error');
+        }
+    }
+    
+    async function startNoiseCancellation() {
+        log("Starte Noise Cancellation...");
+        setStepStatus('step4', 'active');
+        
+        const statusInfo = document.getElementById('statusInfo');
+        
+        try {
+            // Delay-Knoten für Phasenverschiebung
+            delayNode = audioContext.createDelay(1.0);
+            delayNode.delayTime.value = parseFloat(document.getElementById('delaySlider').value) / 1000;
+            
+            // Gain-Knoten für Lautstärkekontrolle
+            gainNode = audioContext.createGain();
+            gainNode.gain.value = parseFloat(document.getElementById('volumeSlider').value) / 100;
+            
+            // Script-Processor für Phasenumkehr
+            const scriptProcessor = audioContext.createScriptProcessor(4096, 1, 1);
+            scriptProcessor.onaudioprocess = function(event) {
+                const inputData = event.inputBuffer.getChannelData(0);
+                const outputData = event.outputBuffer.getChannelData(0);
+                
+                // Phasenumkehr für Noise Cancellation
+                for (let i = 0; i < inputData.length; i++) {
+                    outputData[i] = -inputData[i]; // Invertiert das Signal
+                }
+            };
+            
+            // Audio-Kette erweitern
+            microphone.connect(delayNode);
+            delayNode.connect(scriptProcessor);
+            scriptProcessor.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            isActive = true;
+            document.getElementById('startBtn').disabled = true;
+            document.getElementById('stopBtn').disabled = false;
+            document.getElementById('controls').classList.add('active');
+            document.getElementById('visualizerContainer').style.display = 'block';
+            
+            statusInfo.innerHTML = "✅ <strong>Aktive Geräuschunterdrückung läuft!</strong>";
+            setStepStatus('step4', 'completed');
+            
+            // Visualizer starten
+            startVisualizer();
+            
+            log("Noise Cancellation aktiv ✅");
+            
+        } catch (error) {
+            log(`Noise Cancellation Fehler: ${error.name} - ${error.message}`);
+            statusInfo.innerHTML = `❌ <strong>Fehler:</strong><br>${error.message}`;
+            setStepStatus('step4', 'error');
+        }
+    }
+    
+    function stopNoiseCancellation() {
+        log("Stoppe Noise Cancellation...");
+        
+        if (audioContext) {
+            audioContext.close();
+            audioContext = null;
+        }
+        
+        if (currentStream) {
+            currentStream.getTracks().forEach(track => track.stop());
+            currentStream = null;
+        }
+        
+        if (animationId) {
+            cancelAnimationFrame(animationId);
+        }
+        
+        isActive = false;
+        document.getElementById('startBtn').disabled = false;
+        document.getElementById('stopBtn').disabled = true;
+        document.getElementById('controls').classList.remove('active');
+        document.getElementById('visualizerContainer').style.display = 'none';
+        
+        // Canvas leeren
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // Steps zurücksetzen
+        setStepStatus('step4', '');
+        document.getElementById('statusInfo').innerHTML = "⏹️ Geräuschunterdrückung gestoppt";
+        
+        log("Noise Cancellation gestoppt ⏹️");
+    }
+    
+    function updateVolume(value) {
+        document.getElementById('volumeValue').textContent = value + '%';
+        if (gainNode) {
+            gainNode.gain.value = value / 100;
+            log(`Lautstärke geändert: ${value}%`);
+        }
+    }
+    
+    function updateDelay(value) {
+        document.getElementById('delayValue').textContent = value + 'ms';
+        if (delayNode) {
+            delayNode.delayTime.value = value / 1000;
+            log(`Verzögerung geändert: ${value}ms`);
+        }
+    }
+    
+    function startVisualizer() {
+        const bufferLength = analyser.frequencyBinCount;
+        const dataArray = new Uint8Array(bufferLength);
+        
+        function draw() {
+            if (!isActive) return;
+            
+            analyser.getByteFrequencyData(dataArray);
+            
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            const barWidth = (canvas.width / bufferLength) * 2.5;
+            let barHeight;
+            let x = 0;
+            
+            for (let i = 0; i < bufferLength; i++) {
+                barHeight = (dataArray[i] / 255) * canvas.height;
+                
+                const red = (i * 255) / bufferLength;
+                const green = 50;
+                const blue = 255 - red;
+                
+                ctx.fillStyle = `rgb(${red}, ${green}, ${blue})`;
+                ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
+                
+                x += barWidth + 1;
+            }
+            
+            animationId = requestAnimationFrame(draw);
+        }
+        
+        draw();
+    }
+    
+    // Touch-Handler für mobile Browser
+    document.addEventListener('touchstart', function() {
+        if (audioContext && audioContext.state === 'suspended') {
+            audioContext.resume();
+            log("AudioContext nach Touch aktiviert");
+        }
+    });
+</script>
+```
+
+</body>
+</html>
